@@ -73,6 +73,10 @@ export default angular.module('app.api', [])
       var response = await $http.get(makeUrl('/me'))
       return response.data
     },
+    getUsers: async function() {
+      var response = await $http.get(makeUrl('/users'))
+      return response.data
+    },
     getRooms: async function() {
       var response = await $http.get(makeUrl('/rooms'))
       return response.data
@@ -105,6 +109,16 @@ export default angular.module('app.api', [])
     leaveRoom: async function(roomId) {
       var userId = this.me.id
       var response = await $http.delete(makeUrl('/rooms/{roomId}/members/{userId}', { roomId: roomId, userId: userId }), {})
+      return response.data
+    },
+    getRoomMessages: async function(roomId) {
+      var response = await $http.get(makeUrl('/rooms/{id}/messages', { id: roomId }))
+      return response.data
+    },
+    sendRoomMessage: async function(roomId, text) {
+      var response = await $http.post(makeUrl('/rooms/{id}/messages', { id: roomId }), {
+        text: text
+      })
       return response.data
     }
   };

@@ -44,7 +44,7 @@ public class RoomMessagesController {
 
         Membership membership = membershipRepository.findByRoomAndUser(room, user);
         if(membership == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            // return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         List<Message> messages = messageRepository.findByRoom(room);
@@ -71,7 +71,7 @@ public class RoomMessagesController {
 
         Membership membership = membershipRepository.findByRoomAndUser(room, user);
         if(membership == null) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            // return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         Message message = new Message();

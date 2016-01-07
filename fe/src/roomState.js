@@ -17,7 +17,7 @@ export default angular.module('app.roomState', [
     <div class="row">
       <div class="col-xs-4">
         <div class="list-group">
-          <a ui-sref="app.room({ roomId: room.id })" class="list-group-item" ng-repeat="room in myRooms track by room.id">{{room.name}}</a>
+          <a ui-sref="app.room({ roomId: room.id })" class="list-group-item" ng-repeat="room in myRooms track by room.id" ng-class="{'active': room.id == roomId}">{{room.name}}</a>
         </div>
       </div>
       <div class="col-xs-8">
@@ -25,11 +25,28 @@ export default angular.module('app.roomState', [
         Users: <span ng-repeat="member in members track by member.id">
           <span class="label label-default">{{member.name}}</span>
         </span>
+        <form ng-submit="sendMessage()" class="form-inline">
+          <div class="form-group">
+            <input type="text" ng-model="messageText" class="form-control">
+          </div>
+          <button type="submit" class="btn btn-default">Send</button>
+        </form>
+        <p>message count: {{messages.length}}</p>
+        <ul>
+          <li ng-repeat="message in messages track by message.id">#{{message.id}} {{message.text}}</li>
+        </ul>
       </div>
     </div>`,
+    onExit: function(myRooms, room, members, messages) {
+      myRooms.unobserve()
+      room.unobserve()
+      members.unobserve()
+      messages.unobserve()
+    },
     resolve: {
+      roomId: $stateParams => $stateParams.roomId,
       myRooms: ['$rootScope', 'sl', 'api', async ($rootScope, sl, api) => {
-        var { db, roomTable, userTable, membershipTable, lf } = await sl.objects()
+        var { db, roomTable, membershipTable } = await sl.objects()
 
         var query = db.select(
           roomTable.id.as('id'),
@@ -39,50 +56,24 @@ export default angular.module('app.roomState', [
         .leftOuterJoin(roomTable, membershipTable.roomId.eq(roomTable.id))
         .where(membershipTable.userId.eq(api.me.id))
 
-        var rooms = await query.exec()
-        db.observe(query, async function(changes) {
-          Array.prototype.splice.apply(rooms, [0, rooms.length].concat(changes[changes.length - 1].object))
-          $rootScope.$digest()
-        })
-        return rooms
+        return await sl.observeMany(query)
       }],
-
       room: ['$rootScope', 'sl', '$stateParams', async ($rootScope, sl, $stateParams) => {
         var roomId = $stateParams.roomId
-        var { db, roomTable, userTable, membershipTable, lf } = await sl.objects()
+        var { db, roomTable } = await sl.objects()
 
-        var roomQuery = db.select(
+        var query = db.select(
           roomTable.id.as('id'),
           roomTable.name.as('name')
         )
         .from(roomTable)
         .where(roomTable.id.eq(roomId))
 
-        var rooms = await roomQuery.exec()
-        if(rooms.length !== 1) {
-          console.log('no such room!')
-          throw 'no such room'
-        }
-
-        var room = rooms[0]
-        db.observe(roomQuery, async function(changes) {
-          var rooms = changes[changes.length - 1].object
-          if(rooms.length !== 1) {
-            console.log('room has disappeared!')
-            throw 'room has disappeared'
-          }
-
-          var r = rooms[0]
-          _.assign(room, rooms[0])
-
-          $rootScope.$digest()
-        })
-
-        return room
+        return sl.observeOne(query)
       }],
       members: ['$rootScope', 'sl', '$stateParams', async ($rootScope, sl, $stateParams) => {
         var roomId = $stateParams.roomId
-        var { db, roomTable, userTable, membershipTable, lf } = await sl.objects()
+        var { db, userTable, membershipTable } = await sl.objects()
 
         var query = db.select(
           userTable.id.as('id'),
@@ -92,18 +83,39 @@ export default angular.module('app.roomState', [
         .leftOuterJoin(userTable, membershipTable.userId.eq(userTable.id))
         .where(membershipTable.roomId.eq(roomId))
 
-        var members = await query.exec()
-        db.observe(query, async function(changes) {
-          Array.prototype.splice.apply(members, [0, members.length].concat(changes[changes.length - 1].object))
-          $rootScope.$digest()
-        })
-        return members
+        return await sl.observeMany(query)
+      }],
+      messages: ['$rootScope', 'sl', '$stateParams', async ($rootScope, sl, $stateParams) => {
+        var roomId = $stateParams.roomId
+        var { db, messageTable } = await sl.objects()
+
+        var query = db.select(
+          messageTable.id.as('id'),
+          messageTable.text.as('text')
+        )
+        .from(messageTable)
+        .where(messageTable.roomId.eq(roomId))
+
+        return await sl.observeMany(query)
       }]
     },
-    controller: ($scope, myRooms, room, members) => {
+    controller: ($scope, roomId, api, myRooms, room, members, messages) => {
+      $scope.roomId = roomId
       $scope.myRooms = myRooms
       $scope.room = room
       $scope.members = members
+      $scope.messages = messages
+
+      $scope.messageText = ''
+
+      $scope.sendMessage = () => {
+        var messageText = $scope.messageText
+        if(messageText.length === 0) {
+          return
+        }
+
+        api.sendRoomMessage(roomId, messageText)
+      }
     }
   })
 })

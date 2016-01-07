@@ -12,6 +12,9 @@ export default angular.module('app.appState', [
     abstract: true,
     template: `
     <ui-view></ui-view>`,
+    onExit: function(rooms) {
+      rooms.unobserve()
+    },
     resolve: {
       rooms: ['$rootScope', 'sl', 'api', async ($rootScope, sl, api) => {
         var { db, roomTable, userTable, membershipTable, lf } = await sl.objects()
@@ -25,12 +28,7 @@ export default angular.module('app.appState', [
         .leftOuterJoin(membershipTable, roomTable.id.eq(membershipTable.roomId))
         .groupBy(roomTable.id, roomTable.name)
 
-        var rooms = await query.exec()
-        db.observe(query, async function(changes) {
-          Array.prototype.splice.apply(rooms, [0, rooms.length].concat(changes[changes.length - 1].object))
-          $rootScope.$digest()
-        })
-        return rooms
+        return sl.observeMany(query)
       }]
     }
   })
