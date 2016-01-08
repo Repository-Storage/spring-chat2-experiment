@@ -2,6 +2,7 @@ module.exports = {
   context: __dirname + '/src',
   entry: './index.js',
   output: {
+    path: __dirname + '/dist',
     filename: 'bundle.js'
   },
   module: {
@@ -14,7 +15,7 @@ module.exports = {
           presets: ['es2015', 'stage-0']
         }
       },
-      { test: /\.html$/, loader: 'raw' },
+      { test: /\.html$/, loader: 'file?name=[name].[ext]' },
       { test: /\.css$/, loader: 'style!css' },
       { test: /\.woff$/, loader: 'url?limit=10000&mimetype=application/font-woff' },
       { test: /\.woff2$/, loader: 'url?limit=10000&mimetype=application/font-woff2' },

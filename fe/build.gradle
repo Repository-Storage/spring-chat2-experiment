@@ -1,0 +1,42 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.moowork.gradle:gradle-node-plugin:0.11'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'com.moowork.node'
+
+sourceCompatibility = 1.8
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+node {
+    version = '5.0.0'
+    download = true
+    workDir = file("${project.projectDir}/nodejs")
+}
+
+clean {
+    delete 'dist'
+}
+
+jar {
+    into('resources') {
+        from 'dist'
+        include '**/*.*'
+    }
+
+    dependsOn 'webpack'
+}
+
+task webpack(type: NodeTask, dependsOn: 'npmInstall') {
+    script = file('node_modules/webpack/bin/webpack')
+    args = []
+}

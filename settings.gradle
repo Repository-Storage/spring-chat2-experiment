@@ -1,2 +1,3 @@
 rootProject.name = 'spring-chat2-experiment'
 
+include 'fe', 'be'

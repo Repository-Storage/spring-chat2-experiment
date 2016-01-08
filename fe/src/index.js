@@ -1,4 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.css'
+import './index.html'
 
 import 'babel-polyfill'
 import angular from 'angular'
