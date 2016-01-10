@@ -26,6 +26,7 @@
   "dependencies": {
     "angular": "^1.4.8",
     "angular-ui-router": "^0.2.15",
+    "angularjs-scroll-glue": "^2.0.4",
     "babel-polyfill": "^6.3.14",
     "bootstrap": "^3.3.6",
     "lodash": "^3.10.1",

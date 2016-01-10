@@ -1,6 +1,7 @@
 import angular from 'angular'
 import apiModule from './api'
 import dalModule from './dal'
+import _ from 'lodash'
 
 export default angular.module('app.sl', [
   apiModule,

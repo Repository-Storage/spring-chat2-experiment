@@ -1,0 +1,26 @@
+html, body {
+  height: 100%;
+}
+
+.full-height {
+  height: 100%;
+}
+
+.grow {
+  display: flex;
+  flex-grow: 1;
+  min-height: 1px;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.users {
+  overflow-y: scroll;
+}
+
+.messages {
+  overflow-y: scroll;
+}

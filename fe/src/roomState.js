@@ -2,40 +2,46 @@ import angular from 'angular'
 import uiRouterModule from 'angular-ui-router'
 import slModule from './sl'
 import apiModule from './api'
-import _ from 'lodash'
+//import lueggDirectivesModule from 'angularjs-scroll-glue/src/scrollglue.js'
+require('angularjs-scroll-glue/src/scrollglue.js')
 
 export default angular.module('app.roomState', [
   uiRouterModule,
   slModule,
-  apiModule
+  apiModule,
+  'luegg.directives'
 ])
 .config($stateProvider => {
   $stateProvider
-  .state('app.room', {
+  .state('room', {
     url: '/rooms/:roomId',
     template: `
-    <div class="row">
-      <div class="col-xs-4">
-        <div class="list-group">
-          <a ui-sref="app.room({ roomId: room.id })" class="list-group-item" ng-repeat="room in myRooms track by room.id" ng-class="{'active': room.id == roomId}">{{room.name}}</a>
-        </div>
+    <div class="col-xs-4">
+      <div class="list-group">
+        <a ui-sref="room({ roomId: room.id })" class="list-group-item" ng-repeat="room in myRooms track by room.id" ng-class="{'active': room.id == roomId}">{{room.name}}</a>
       </div>
-      <div class="col-xs-8">
-        <h1>#{{room.id}} {{room.name}}</h1>
+    </div>
+    <div class="col-xs-8 grow flex-column">
+      <h1>#{{room.id}} {{room.name}}</h1>
+      <div>
         Users: <span ng-repeat="member in members track by member.id">
           <span class="label label-default">{{member.name}}</span>
         </span>
-        <form ng-submit="sendMessage()" class="form-inline">
-          <div class="form-group">
-            <input type="text" ng-model="messageText" class="form-control">
-          </div>
-          <button type="submit" class="btn btn-default">Send</button>
-        </form>
-        <p>message count: {{messages.length}}</p>
+      </div>
+      <p>message count: {{messages.length}}</p>
+      <div class="grow" style="overflow-y: scroll" scroll-glue>
         <ul>
           <li ng-repeat="message in messages track by message.id">#{{message.id}} {{message.text}}</li>
         </ul>
       </div>
+      <form ng-submit="sendMessage()">
+        <div class="input-group">
+          <input type="text" class="form-control" ng-model="messageText">
+          <span class="input-group-btn">
+            <button type="submit" class="btn btn-default">Send</button>
+          </span>
+        </div>
+      </form>
     </div>`,
     onExit: function(myRooms, room, members, messages) {
       myRooms.unobserve()
@@ -56,7 +62,7 @@ export default angular.module('app.roomState', [
         .leftOuterJoin(roomTable, membershipTable.roomId.eq(roomTable.id))
         .where(membershipTable.userId.eq(api.me.id))
 
-        return await sl.observeMany(query)
+        return sl.observeMany(query)
       }],
       room: ['$rootScope', 'sl', '$stateParams', async ($rootScope, sl, $stateParams) => {
         var roomId = $stateParams.roomId
@@ -113,6 +119,8 @@ export default angular.module('app.roomState', [
         if(messageText.length === 0) {
           return
         }
+
+        $scope.messageText = ''
 
         api.sendRoomMessage(roomId, messageText)
       }
