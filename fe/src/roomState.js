@@ -31,7 +31,7 @@ export default angular.module('app.roomState', [
       <p>message count: {{messages.length}}</p>
       <div class="grow" style="overflow-y: scroll" scroll-glue>
         <ul>
-          <li ng-repeat="message in messages track by message.id">#{{message.id}} {{message.text}}</li>
+          <li ng-repeat="message in messages track by message.id">#{{message.id}} {{message.name}}: {{message.text}}</li>
         </ul>
       </div>
       <form ng-submit="sendMessage()">
@@ -93,13 +93,15 @@ export default angular.module('app.roomState', [
       }],
       messages: ['$rootScope', 'sl', '$stateParams', async ($rootScope, sl, $stateParams) => {
         var roomId = $stateParams.roomId
-        var { db, messageTable } = await sl.objects()
+        var { db, messageTable, userTable } = await sl.objects()
 
         var query = db.select(
           messageTable.id.as('id'),
-          messageTable.text.as('text')
+          messageTable.text.as('text'),
+          userTable.name.as('name')
         )
         .from(messageTable)
+        .leftOuterJoin(userTable, messageTable.userId.eq(userTable.id))
         .where(messageTable.roomId.eq(roomId))
 
         return await sl.observeMany(query)

@@ -44,6 +44,10 @@ export default angular.module('app.sl', [
       dal.deleteRoom(payload.id)
     })
 
+    // TODO: handle userCreated
+    // TODO: handle userUpdated
+    // TODO: handle userDeleted
+
     $rootScope.$on('api-userJoinedRoom', (e, payload) => {
       dal.putRoomMember(payload.roomId, payload.userId)
     })
